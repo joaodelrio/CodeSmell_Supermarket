@@ -20,146 +20,104 @@ public class UserService {
     }
 
     public ApiResponse findAllUsers() {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             List<User> userList = userRepository.findAll();
-            if (userList.isEmpty()) {
-                apiResponse.setMessage("No users found within the database");
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setData(null);
-            } else {
-                apiResponse.setMessage("Successfully fetched users from within database");
-                apiResponse.setData(userList);
-                apiResponse.setStatus(HttpStatus.OK.value());
-            }
-            return apiResponse;
+            return notFoundListUser(userList);
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse addNewUser(User user) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             userRepository.save(user);
-            apiResponse.setMessage("Successfully added user within the database");
-            apiResponse.setData(user);
-            apiResponse.setStatus(HttpStatus.OK.value());
-            return apiResponse;
+            return new ApiResponse("Successfully added user within the database", HttpStatus.OK.value(), user);
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse deleteUserById(Integer userId) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             User user = userRepository.getById(userId);
-            if (null != user) {
+            ApiResponse response = notFoundUser(user);
+            if (response.getStatus() == HttpStatus.OK.value()) {
                 user.setOrders(null);
                 userRepository.delete(user);
-                apiResponse.setStatus(HttpStatus.OK.value());
-                apiResponse.setMessage("Successfully deleted user from within the database");
-            } else {
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such user found against this ID");
             }
-            apiResponse.setData(null);
-            return apiResponse;
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse deleteUser(User user) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             userRepository.delete(user);
-            apiResponse.setStatus(HttpStatus.OK.value());
-            apiResponse.setMessage("Successfully deleted user from within the database");
-            apiResponse.setData(null);
-            return apiResponse;
+            return new ApiResponse("Successfully deleted user from within the database", HttpStatus.OK.value(), null);
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse updateUser(User updatedUser) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             User existingUser = userRepository.getById(updatedUser.getId());
-            if (null != existingUser) {
+            ApiResponse response = notFoundUser(existingUser);
+            if (response.getStatus() == HttpStatus.OK.value()) {
                 userRepository.save(updatedUser);
-                apiResponse.setMessage("Successfully updated user within the database");
-                apiResponse.setData(updatedUser);
-                apiResponse.setStatus(HttpStatus.OK.value());
-            } else {
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such user found against this ID");
-                apiResponse.setData(null);
             }
-            return apiResponse;
-
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse getUserById(Integer userId) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             User user = userRepository.getById(userId);
-            if (null != user) {
-                apiResponse.setStatus(HttpStatus.OK.value());
-                apiResponse.setMessage("Successful");
-                apiResponse.setData(user);
-            } else {
-                apiResponse.setData(null);
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such user found within the database");
-            }
-            return apiResponse;
+            return notFoundUser(user);
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse getOrdersByUserId(Integer userId) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             User user = userRepository.getById(userId);
-            if (null != user) {
-                List<Order> orders = user.getOrders();
-                if (orders.isEmpty()) {
-                    apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                    apiResponse.setMessage("No orders made yet by this user");
-                } else {
-                    apiResponse.setStatus(HttpStatus.OK.value());
-                    apiResponse.setMessage("These are the orders made by the user");
-                }
-                apiResponse.setData(orders);
+            ApiResponse response = notFoundUser(user);
+            if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
+                return response;
             } else {
-                apiResponse.setData(null);
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such user found against this ID within the database");
+                List<Order> orders = user.getOrders();
+                return notFoundListOrders(orders);
             }
-            return apiResponse;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        }
+    }
+
+    private ApiResponse notFoundUser(User user) {
+        if (user == null) {
+            return new ApiResponse("No such user found within the database", HttpStatus.NOT_FOUND.value(), null);
+        } else {
+            return new ApiResponse("Successful", HttpStatus.OK.value(), user);
+        }
+    }
+
+    private ApiResponse notFoundListUser(List<User> userList) {
+        if (userList.isEmpty()) {
+            return new ApiResponse("No users found within the database", HttpStatus.NOT_FOUND.value(), null);
+        } else {
+            return new ApiResponse("Successfully fetched users from within database", HttpStatus.OK.value(), userList);
+        }
+    }
+
+    private ApiResponse notFoundListOrders(List<Order> orders) {
+        if (orders.isEmpty()) {
+            return new ApiResponse("No orders made yet by this user", HttpStatus.NOT_FOUND.value(), null);
+        } else {
+            return new ApiResponse("These are the orders made by the user", HttpStatus.OK.value(), orders);
         }
     }
 }

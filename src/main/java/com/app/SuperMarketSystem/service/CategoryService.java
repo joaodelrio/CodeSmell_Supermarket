@@ -4,6 +4,9 @@ import com.app.SuperMarketSystem.dto.ApiResponse;
 import com.app.SuperMarketSystem.model.Category;
 import com.app.SuperMarketSystem.model.Product;
 import com.app.SuperMarketSystem.repository.CategoryRepository;
+
+import io.swagger.annotations.Api;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,132 +23,94 @@ public class CategoryService {
     }
 
     public ApiResponse findAllCategories() {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             List<Category> categoriesList = categoryRepository.findAll();
-            if (categoriesList.isEmpty()) {
-                apiResponse.setMessage("No categories found within the database");
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setData(null);
-            } else {
-                apiResponse.setMessage("Successfully fetched categories from the database");
-                apiResponse.setData(categoriesList);
-                apiResponse.setStatus(HttpStatus.OK.value());
-            }
-            return apiResponse;
+            ApiResponse response = notFoundListCategory(categoriesList);
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse addCategory(Category category) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             categoryRepository.save(category);
-            apiResponse.setMessage("Successfully added category in the database");
-            apiResponse.setData(category);
-            apiResponse.setStatus(HttpStatus.OK.value());
-            return apiResponse;
+            return new ApiResponse("Successfully added category in the database", HttpStatus.OK.value(), category);
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse deleteCategory(String categoryId) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             Category category = categoryRepository.getById(categoryId);
-            if (null != category) {
+            ApiResponse response = notFoundCategory(category);
+            if (response.getStatus() == HttpStatus.OK.value()) {
                 category.setProducts(null);
                 categoryRepository.delete(category);
-                apiResponse.setStatus(HttpStatus.OK.value());
-                apiResponse.setMessage("Successfully deleted category from the database");
-            } else {
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such category found against this ID");
-            }
-            apiResponse.setData(null);
-            return apiResponse;
+            } 
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse updateCategory(Category category) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             Category existingCategory = categoryRepository.getById(category.getId());
-            if (null != existingCategory) {
+            ApiResponse response = notFoundCategory(existingCategory);
+            if (response.getStatus() == HttpStatus.OK.value()) {
                 categoryRepository.save(category);
-                apiResponse.setMessage("Successfully updated category within the database");
-                apiResponse.setData(category);
-                apiResponse.setStatus(HttpStatus.OK.value());
-            } else {
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such category found against this ID");
-                apiResponse.setData(null);
-            }
-            return apiResponse;
-
+            } 
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse getCategoryById(String categoryId) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             Category category = categoryRepository.getById(categoryId);
-            if (null != category) {
-                apiResponse.setStatus(HttpStatus.OK.value());
-                apiResponse.setMessage("Successful");
-                apiResponse.setData(category);
-            } else {
-                apiResponse.setData(null);
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
-                apiResponse.setMessage("No such category found within the database");
-            }
-            return apiResponse;
+            ApiResponse response = notFoundCategory(category);
+            return response;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
         }
     }
 
     public ApiResponse addProductsInCategory(String categoryId, List<Product> productList) {
-        ApiResponse apiResponse = new ApiResponse();
         try {
             Category category = categoryRepository.getById(categoryId);
-            if (null != category) {
+            ApiResponse response = notFoundCategory(category);
+            if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
+                return response;
+            } else {
                 if (productList.isEmpty()) {
-                    apiResponse.setMessage("The product list is empty");
-                    apiResponse.setData(productList);
+                    return new ApiResponse("The product list is empty", HttpStatus.OK.value(), productList);
                 } else {
                     category.getProducts().addAll(productList);
                     categoryRepository.save(category);
-                    apiResponse.setMessage("Successfully added products within the category");
-                    apiResponse.setData(category);
+                    return new ApiResponse("Successfully added products within the category", HttpStatus.OK.value(), category);
                 }
-                apiResponse.setStatus(HttpStatus.OK.value());
-            } else {
-                apiResponse.setMessage("No such category found within the database");
-                apiResponse.setData(null);
-                apiResponse.setStatus(HttpStatus.NOT_FOUND.value());
             }
-            return apiResponse;
         } catch (Exception e) {
-            apiResponse.setMessage(e.getMessage());
-            apiResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return apiResponse;
+            return new ApiResponse(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), null);
+        }
+    }
+    
+    private ApiResponse notFoundCategory(Category category) {
+        if (category == null) {
+            return new ApiResponse("No such category found within the database", HttpStatus.NOT_FOUND.value(), null);
+        }else{
+            return new ApiResponse("Successful", HttpStatus.OK.value(), category);
+        }
+    }
+
+    private ApiResponse notFoundListCategory(List<Category> categoriesList) {
+        if (categoriesList.isEmpty()) {
+            return new ApiResponse("No categories found within the database", HttpStatus.NOT_FOUND.value(), null);
+        }else{
+            return new ApiResponse("Successful", HttpStatus.OK.value(), categoriesList);
         }
     }
 }

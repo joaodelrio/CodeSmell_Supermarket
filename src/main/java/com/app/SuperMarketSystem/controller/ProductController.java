@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/products")
-public class ProductController {
+public class ProductController implements ICrudController<Product, String> {
     private final ProductService productService;
 
     @Autowired
@@ -19,27 +19,27 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping("/list")
+    @Override
     public ApiResponse list() {
         return productService.findAllProducts();
     }
 
-    @PostMapping("/save")
+    @Override
     public ApiResponse save(@RequestBody Product product) {
         return productService.addProduct(product);
     }
 
-    @PutMapping("/update")
+    @Override
     public ApiResponse update(@RequestBody Product product) {
         return productService.updateProduct(product);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @Override
     public ApiResponse delete(@PathVariable(name = "id") String productId) {
         return productService.deleteProduct(productId);
     }
 
-    @GetMapping("/getBy/{id}")
+    @Override
     public ApiResponse getById(@PathVariable(name = "id") String productId) {
         return productService.getProductById(productId);
     }

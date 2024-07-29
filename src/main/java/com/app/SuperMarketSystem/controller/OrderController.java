@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/orders")
-public class OrderController {
+public class OrderController implements ICrudController<Order, String> {
     private final OrderService orderService;
 
     @Autowired
@@ -16,27 +16,27 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @GetMapping("/list")
+    @Override
     public ApiResponse list() {
         return orderService.findAllOrders();
     }
 
-    @PostMapping("/save")
+    @Override
     public ApiResponse save(@RequestBody Order order) {
         return orderService.addOrder(order);
     }
 
-    @PutMapping("/update")
+    @Override
     public ApiResponse update(@RequestBody Order order) {
         return orderService.updateOrder(order);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @Override
     public ApiResponse delete(@PathVariable(name = "id") String orderId) {
         return orderService.deleteOrder(orderId);
     }
 
-    @GetMapping("/getBy/{id}")
+    @Override
     public ApiResponse getById(@PathVariable(name = "id") String orderId) {
         return orderService.getOrderByOrderNumber(orderId);
     }

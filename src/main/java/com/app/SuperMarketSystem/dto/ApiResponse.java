@@ -14,4 +14,10 @@ public class ApiResponse {
     Integer status;
     String message;
     Object data = new Object();
+
+    public ApiResponse(String message, int status, Object data) {
+        this.message = message;
+        this.status = status;
+        this.data = data;
+    }
 }

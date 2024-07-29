@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ConstraintViolation {
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Object> constraintViolation(Exception e) {
-        return new ResponseEntity<>(e.getLocalizedMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Object> constraintViolation(ConstraintViolationException exception) {
+        return new ResponseEntity<>(exception.getLocalizedMessage(), HttpStatus.BAD_REQUEST);
     }
 }

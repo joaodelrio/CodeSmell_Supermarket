@@ -3,39 +3,40 @@ package com.app.SuperMarketSystem.controller;
 import com.app.SuperMarketSystem.dto.ApiResponse;
 import com.app.SuperMarketSystem.model.User;
 import com.app.SuperMarketSystem.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController implements ICrudController<User, Integer> {
     private final UserService userService;
 
+    @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping("/list")
+    @Override
     public ApiResponse list() {
         return userService.findAllUsers();
     }
 
-    @PostMapping("/save")
+    @Override
     public ApiResponse save(@RequestBody User user) {
         return userService.addNewUser(user);
     }
 
-    @PutMapping("/update")
+    @Override
     public ApiResponse update(@RequestBody User user) {
         return userService.updateUser(user);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @Override
     public ApiResponse delete(@PathVariable(name = "id") Integer userId) {
         return userService.deleteUserById(userId);
     }
 
-    @GetMapping("/getBy/{id}")
-    @ResponseBody
+    @Override
     public ApiResponse getById(@PathVariable(name = "id") Integer userId) {
         return userService.getUserById(userId);
     }

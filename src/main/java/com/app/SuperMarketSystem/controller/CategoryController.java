@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/category")
-public class CategoryController {
+public class CategoryController implements ICrudController<Category, String> {
     private final CategoryService categoryService;
 
     @Autowired
@@ -19,27 +19,27 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @GetMapping("/list")
+    @Override
     public ApiResponse list() {
         return categoryService.findAllCategories();
     }
 
-    @PostMapping("/save")
+    @Override
     public ApiResponse save(@RequestBody Category category) {
         return categoryService.addCategory(category);
     }
 
-    @PutMapping("/update")
+    @Override
     public ApiResponse update(@RequestBody Category category) {
         return categoryService.updateCategory(category);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @Override
     public ApiResponse delete(@PathVariable(name = "id") String categoryId) {
         return categoryService.deleteCategory(categoryId);
     }
 
-    @GetMapping("/getBy/{id}")
+    @Override
     public ApiResponse getById(@PathVariable(name = "id") String categoryId) {
         return categoryService.getCategoryById(categoryId);
     }
